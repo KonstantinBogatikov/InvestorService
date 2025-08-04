@@ -24,7 +24,7 @@ public class InvestorController {
 
     // GET /api/investors/{investorId}/balance
     @GetMapping("/{investorId}/balance")
-    public ResponseEntity<String> getInvestorBalance(@PathVariable("investorId") Long investorId) {
+    public ResponseEntity<String> getBalance(@PathVariable("investorId") Long investorId) {
         return service.getBalance(investorId)
                 .map(balance -> new ResponseEntity<>(String.format("Баланс пользователя %d: %.2f руб.", investorId, balance),
                         HttpStatus.OK))
@@ -33,14 +33,14 @@ public class InvestorController {
 
     // POST /api/investors/{investorId}/putmoney
     @PostMapping("/{investorId}/putmoney")
-    public ResponseEntity<String> depositMoney(@PathVariable("investorId") Long investorId, @RequestParam BigDecimal amount) {
+    public ResponseEntity<String> putMoney(@PathVariable("investorId") Long investorId, @RequestParam BigDecimal amount) {
         service.putMoney(investorId, amount);
         return new ResponseEntity<>("Пополнение успешно выполнено", HttpStatus.OK);
     }
 
     // POST /api/investors/{investorId}/takemoney
     @PostMapping("/{investorId}/takemoney")
-    public ResponseEntity<String> withdrawMoney(@PathVariable("investorId") Long investorId, @RequestParam BigDecimal amount) {
+    public ResponseEntity<String> takeMoney(@PathVariable("investorId") Long investorId, @RequestParam BigDecimal amount) {
         if (service.takeMoney(investorId, amount)) {
             return new ResponseEntity<>("Операция снятия выполнена успешно", HttpStatus.OK);
         } else {
