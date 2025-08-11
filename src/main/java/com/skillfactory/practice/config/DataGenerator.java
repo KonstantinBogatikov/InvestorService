@@ -1,9 +1,9 @@
 package com.skillfactory.practice.config;
 
-import com.skillfactory.practice.entity.Investor;
+import com.skillfactory.practice.entity.Customer;
 import com.skillfactory.practice.entity.Operation;
 import com.skillfactory.practice.enums.OperationType;
-import com.skillfactory.practice.repository.InvestorRepository;
+import com.skillfactory.practice.repository.CustomerRepository;
 import com.skillfactory.practice.repository.OperationRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -16,58 +16,58 @@ import java.util.Random;
 @Component
 public class DataGenerator implements CommandLineRunner {
 
-    private final InvestorRepository investorRepository;
+    private final CustomerRepository customerRepository;
     private final OperationRepository operationRepository;
 
-    public DataGenerator(InvestorRepository investorRepository, OperationRepository operationRepository) {
-        this.investorRepository = investorRepository;
+    public DataGenerator(CustomerRepository customerRepository, OperationRepository operationRepository) {
+        this.customerRepository = customerRepository;
         this.operationRepository = operationRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        generateAdditionalInvestorsIfNeeded();
-        generateAdditionalTransactionsForNewInvestors();
+        generateAdditionalCustomersIfNeeded();
+        generateAdditionalTransactionsForNewCustomers();
     }
 
-    private void generateAdditionalInvestorsIfNeeded() {
-        long currentInvestorCount = investorRepository.count();
-        int neededInvestors = Math.max(100 - (int)currentInvestorCount, 0);
+    private void generateAdditionalCustomersIfNeeded() {
+        long currentCustomerCount = customerRepository.count();
+        int neededCustomers = Math.max(100 - (int)currentCustomerCount, 0);
 
-        if (neededInvestors <= 0) {
+        if (neededCustomers <= 0) {
             return;
         }
 
         Random random = new Random();
-        List<Investor> additionalInvestors = new ArrayList<>();
+        List<Customer> additionalCustomers = new ArrayList<>();
 
-        for (int i = 0; i < neededInvestors; i++) {
-            Investor investor = new Investor();
-            investor.setBalance(BigDecimal.valueOf(random.nextInt(10_000)));
-            additionalInvestors.add(investor);
+        for (int i = 0; i < neededCustomers; i++) {
+            Customer customer = new Customer();
+            customer.setBalance(BigDecimal.valueOf(random.nextInt(10_000)));
+            additionalCustomers.add(customer);
         }
 
-        investorRepository.saveAll(additionalInvestors);
+        customerRepository.saveAll(additionalCustomers);
     }
 
-    private void generateAdditionalTransactionsForNewInvestors() {
-        long totalInvestors = investorRepository.count();
+    private void generateAdditionalTransactionsForNewCustomers() {
+        long totalCustomers = customerRepository.count();
         long existingTransactionsCount = operationRepository.count();
 
-        if (totalInvestors == 0 || existingTransactionsCount > 0) {
+        if (totalCustomers == 0 || existingTransactionsCount > 0) {
             return;
         }
 
         Random random = new Random();
-        List<Investor> allInvestors = (List<Investor>) investorRepository.findAll();
+        List<Customer> allCustomers = (List<Customer>) customerRepository.findAll();
 
-        for (Investor investor : allInvestors) {
+        for (Customer customer : allCustomers) {
             int numberOfTransactions = random.nextInt(20) + 10; // От 10 до 29 транзакций
             List<Operation> transactions = new ArrayList<>();
 
             for (int j = 0; j < numberOfTransactions; j++) {
                 Operation transaction = new Operation();
-                transaction.setInvestor(investor);
+                transaction.setCustomer(customer);
                 transaction.setType(getRandomTransactionType());
                 transaction.setAmount(BigDecimal.valueOf(random.nextInt(1000) + 1)); // Суммы от 1 до 1000
                 transactions.add(transaction);

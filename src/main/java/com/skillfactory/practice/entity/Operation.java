@@ -21,8 +21,8 @@ public class Operation {
     private Long operationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "investor_id", nullable = false)
-    private Investor investor;
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
