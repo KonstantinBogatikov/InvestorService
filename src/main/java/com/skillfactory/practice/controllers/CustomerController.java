@@ -26,9 +26,9 @@ public class CustomerController {
     @GetMapping("/{customersId}/balance")
     public ResponseEntity<String> getBalance(@PathVariable("customersId") Long customersId) {
         return service.getBalance(customersId)
-                .map(balance -> new ResponseEntity<>(String.format("Баланс пользователя %d: %.2f руб.", customersId, balance),
+                .map(balance -> new ResponseEntity<>(String.format("Баланс клиента %d: %.2f руб.", customersId, balance),
                         HttpStatus.OK))
-                .orElse(new ResponseEntity<>("Пользователь не найден", HttpStatus.NOT_FOUND));
+                .orElse(new ResponseEntity<>("Клиент не найден", HttpStatus.NOT_FOUND));
     }
 
     // POST /api/customers/{customersId}/putmoney
@@ -44,7 +44,7 @@ public class CustomerController {
         if (service.takeMoney(customersId, amount)) {
             return new ResponseEntity<>("Операция снятия выполнена успешно", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("Недостаточно средств на счету", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Недостаточно средств на счете", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -61,6 +61,20 @@ public class CustomerController {
 
         List<Operation> result = service.getOperationList(customersId, startDate, endDate);
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    // POST /api/customers/{senderId}/transfermoney/{recipientId}
+    @PostMapping("/{senderId}/transfermoney/{recipientId}")
+    public ResponseEntity<String> transferMoney(
+            @PathVariable("senderId") Long senderId,
+            @PathVariable("recipientId") Long recipientId,
+            @RequestParam BigDecimal amount) {
+
+        if (service.transferMoney(senderId, recipientId, amount)) {
+            return new ResponseEntity<>("Перевод выполнен успешно", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Ошибка перевода: недостаточно средств или клиент не найден", HttpStatus.BAD_REQUEST);
+        }
     }
 
     // Вспомогательная функция парсинга даты

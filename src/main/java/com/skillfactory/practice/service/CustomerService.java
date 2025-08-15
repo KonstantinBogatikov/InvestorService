@@ -37,6 +37,7 @@ public class CustomerService {
         if (customerOptional.isPresent()) {
             Customer customer = customerOptional.get();
             customer.setBalance(customer.getBalance().add(amount));
+            System.out.println(customer.getBalance());
             customerRepository.save(customer);
 
             saveOperation(customerId, OperationType.DEPOSIT, amount);
@@ -57,6 +58,40 @@ public class CustomerService {
             return true;
         }
         return false;
+    }
+
+    @Transactional
+    public boolean transferMoney(Long senderId, Long recipientId, BigDecimal amount) {
+        Optional<Customer> senderOptional = customerRepository.findById(senderId);
+        Optional<Customer> recipientOptional = customerRepository.findById(recipientId);
+
+        // Проверка, что клиенты существуют
+        if (senderOptional.isEmpty() || recipientOptional.isEmpty()) {
+            return false;
+        }
+
+        Customer sender = senderOptional.get();
+        Customer recipient = recipientOptional.get();
+
+        // Проверка, что достаточно средств
+        if (sender.getBalance().compareTo(amount) < 0) {
+            return false;
+        }
+
+        // Переводим деньги между клиентами
+        synchronized (this) {
+            sender.setBalance(sender.getBalance().subtract(amount));
+            recipient.setBalance(recipient.getBalance().add(amount));
+
+            customerRepository.save(sender);
+            customerRepository.save(recipient);
+
+            // Записываем в БД информацию о транзакциях
+            saveOperation(senderId, OperationType.WITHDRAWAL, amount);
+            saveOperation(recipientId, OperationType.DEPOSIT, amount);
+        }
+
+        return true;
     }
 
     private void saveOperation(long customerId, OperationType type, BigDecimal amount) {

@@ -20,7 +20,7 @@ public class Operation {
     @Setter(AccessLevel.NONE)
     private Long operationId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
