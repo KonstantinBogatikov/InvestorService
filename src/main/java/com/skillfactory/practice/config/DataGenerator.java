@@ -9,6 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -28,6 +29,7 @@ public class DataGenerator implements CommandLineRunner {
     public void run(String... args) throws Exception {
         generateAdditionalCustomersIfNeeded();
         generateAdditionalTransactionsForNewCustomers();
+        generateTransferOperationsBetweenCustomers();
     }
 
     private void generateAdditionalCustomersIfNeeded() {
@@ -75,6 +77,55 @@ public class DataGenerator implements CommandLineRunner {
 
             operationRepository.saveAll(transactions);
         }
+    }
+
+    private void generateTransferOperationsBetweenCustomers() {
+        List<Customer> allCustomers = (List<Customer>) customerRepository.findAll();
+        if (allCustomers.size() < 2) {
+            return;
+        }
+
+        Random random = new Random();
+
+        // Количество переводов для генерации
+        int numberOfTransfers = 50;
+
+        List<Operation> transfers = new ArrayList<>();
+
+        for (int i = 0; i < numberOfTransfers; i++) {
+            // Выбираем двух случайных разных клиентов
+            Customer sender = allCustomers.get(random.nextInt(allCustomers.size()));
+            Customer recipient;
+            do {
+                recipient = allCustomers.get(random.nextInt(allCustomers.size()));
+            } while (recipient.getId() == sender.getId());
+
+            // Генерируем сумму перевода (примерно половина баланса отправителя)
+            BigDecimal amount = sender.getBalance()
+                    .divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+
+            // Создаем операцию списания у отправителя
+            Operation withdrawal = new Operation();
+            withdrawal.setCustomer(sender);
+            withdrawal.setType(OperationType.WITHDRAWAL);
+            withdrawal.setAmount(amount);
+            transfers.add(withdrawal);
+
+            // Создаем операцию зачисления у получателя
+            Operation deposit = new Operation();
+            deposit.setCustomer(recipient);
+            deposit.setType(OperationType.DEPOSIT);
+            deposit.setAmount(amount);
+            transfers.add(deposit);
+
+            // Обновляем балансы клиентов
+            sender.setBalance(sender.getBalance().subtract(amount));
+            recipient.setBalance(recipient.getBalance().add(amount));
+        }
+
+        // Сохраняем все операции и обновленных клиентов
+        operationRepository.saveAll(transfers);
+        customerRepository.saveAll(allCustomers);
     }
 
     private static OperationType getRandomTransactionType() {
